@@ -1,0 +1,9 @@
+Flask
+flask-cors
+flask-jwt-extended
+boto3
+botocore
+requests
+werkzeug
+python-dotenv
+gunicorn
