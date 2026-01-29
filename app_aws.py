@@ -34,10 +34,6 @@ def create_app():
     )
 
    
-    app.sns = boto3.client(
-        "sns",
-        region_name="us-east-1"
-    )
 
     app.register_blueprint(auth_bp, url_prefix="/api/auth")
     app.register_blueprint(coin_bp, url_prefix="/api")
