@@ -10,8 +10,8 @@ from routes.alert_routes import alert_bp
 from routes.admin_routes import admin_bp
 
 import boto3
+from botocore.exceptions import ClientError
 import os
-
 
 def create_app():
     app = Flask(__name__)
@@ -19,7 +19,7 @@ def create_app():
 
     CORS(
         app,
-        origins=["http://localhost:5173"],
+        origins=["https://aws-cryptotracker-frontend-8kudd9rmy.vercel.app"],
         methods=["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
         allow_headers=["Content-Type", "Authorization", "Accept"],
         supports_credentials=True
@@ -27,13 +27,31 @@ def create_app():
 
     jwt.init_app(app)
 
-   
     app.dynamodb = boto3.resource(
         "dynamodb",
         region_name="us-east-1"
     )
 
-   
+    app.sns = boto3.client(
+        "sns",
+        region_name="us-east-1"
+    )
+
+    SNS_TOPIC_ADMIN_ARN="arn:aws:sns:us-east-1:604665149129:admin_notifications_topic"
+    SNS_TOPIC_USER_ARN="arn:aws:sns:us-east-1:604665149129:user_price_alerts_topic"
+
+    def send_notification(subject, message, topic="user"):
+        try:
+            topic_arn = SNS_TOPIC_USER_ARN if topic == "user" else SNS_TOPIC_ADMIN_ARN
+            app.sns.publish(
+                TopicArn=topic_arn,
+                Subject=subject,
+                Message=message
+            )
+        except ClientError as e:
+            print(e)
+
+    app.send_notification = send_notification
 
     app.register_blueprint(auth_bp, url_prefix="/api/auth")
     app.register_blueprint(coin_bp, url_prefix="/api")
@@ -42,7 +60,6 @@ def create_app():
     app.register_blueprint(admin_bp, url_prefix="/api/admin")
 
     return app
-
 
 app = create_app()
 

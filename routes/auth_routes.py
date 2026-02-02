@@ -9,9 +9,6 @@ from werkzeug.security import generate_password_hash, check_password_hash
 
 auth_bp = Blueprint("auth", __name__)
 
-# =========================
-# SIGNUP
-# =========================
 @auth_bp.route("/signup", methods=["POST"])
 def signup():
     data = request.get_json(force=True)
@@ -35,12 +32,14 @@ def signup():
         "role": "user"
     })
 
+    current_app.send_notification(
+        "New User Signup",
+        f"User {email} registered"
+    )
+
     return jsonify({"message": "User registered successfully"}), 201
 
 
-# =========================
-# LOGIN ✅ FIXED PROPERLY
-# =========================
 @auth_bp.route("/login", methods=["POST"])
 def login():
     data = request.get_json(force=True)
@@ -58,12 +57,14 @@ def login():
     if not user or not check_password_hash(user["password"], password):
         return jsonify({"message": "Invalid email or password"}), 401
 
-    # ✅ CORRECT JWT CREATION
     access_token = create_access_token(
-        identity=user["email"],          # MUST be string
-        additional_claims={
-            "role": user["role"]
-        }
+        identity=user["email"],
+        additional_claims={"role": user["role"]}
+    )
+
+    current_app.send_notification(
+        "User Login",
+        f"User {email} logged in"
     )
 
     return jsonify({
@@ -77,14 +78,11 @@ def login():
     }), 200
 
 
-# =========================
-# CHECK LOGIN ✅ FIXED
-# =========================
 @auth_bp.route("/check", methods=["GET"])
 @jwt_required()
 def check_login():
-    email = get_jwt_identity()   
-    claims = get_jwt()           
+    email = get_jwt_identity()
+    claims = get_jwt()
 
     table = current_app.dynamodb.Table("Users")
     user = table.get_item(Key={"email": email}).get("Item")
@@ -101,16 +99,21 @@ def check_login():
         }
     }), 200
 
+
 @auth_bp.route("/logout", methods=["POST", "OPTIONS"])
 @jwt_required(optional=True)
 def logout():
-    
-
     if request.method == "OPTIONS":
         return jsonify({"ok": True}), 200
 
     identity = get_jwt_identity()
     claims = get_jwt()
+
+    if identity:
+        current_app.send_notification(
+            "User Logout",
+            f"User {identity} logged out"
+        )
 
     return jsonify({
         "success": True,
