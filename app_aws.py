@@ -37,8 +37,8 @@ def create_app():
         region_name="us-east-1"
     )
 
-    SNS_TOPIC_ADMIN_ARN="arn:aws:sns:us-east-1:604665149129:admin_notifications_topic"
-    SNS_TOPIC_USER_ARN="arn:aws:sns:us-east-1:604665149129:user_price_alerts_topic"
+    SNS_TOPIC_ADMIN_ARN="arn:aws:sns:us-east-1:195275652542:admin_notifications_topic"
+    SNS_TOPIC_USER_ARN="arn:aws:sns:us-east-1:195275652542:user_price_alerts_topic"
 
     def send_notification(subject, message, topic="user"):
         try:
