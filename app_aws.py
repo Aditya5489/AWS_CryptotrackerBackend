@@ -38,18 +38,17 @@ def create_app():
     )
 
     SNS_TOPIC_ADMIN_ARN="arn:aws:sns:us-east-1:195275652542:admin_notifications_topic"
-    SNS_TOPIC_USER_ARN="arn:aws:sns:us-east-1:195275652542:user_price_alerts_topic"
-
-    def send_notification(subject, message, topic="user"):
+   
+    def send_notification(subject, message):
         try:
-            topic_arn = SNS_TOPIC_USER_ARN if topic == "user" else SNS_TOPIC_ADMIN_ARN
             app.sns.publish(
-                TopicArn=topic_arn,
+                TopicArn=SNS_TOPIC_ADMIN_ARN,
                 Subject=subject,
                 Message=message
             )
         except ClientError as e:
             print(e)
+
 
     app.send_notification = send_notification
 

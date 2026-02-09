@@ -69,8 +69,3 @@ def delete_alert(email, alert_id):
     )
     return jsonify({"message": "Alert deleted"}), 200
 
-def trigger_price_alert(alert, current_price):
-    current_app.send_notification(
-        "Crypto Price Alert",
-        f"{alert['coinName']} reached {current_price}"
-    )
