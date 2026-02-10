@@ -9,6 +9,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 
 auth_bp = Blueprint("auth", __name__)
 
+
 @auth_bp.route("/signup", methods=["POST"])
 def signup():
     data = request.get_json(force=True)
@@ -22,19 +23,17 @@ def signup():
 
     table = current_app.dynamodb.Table("Users")
 
+    # Check if user already exists
     if "Item" in table.get_item(Key={"email": email}):
         return jsonify({"message": "User already exists"}), 409
 
-    table.put_item(Item={
-        "email": email,
-        "username": username,
-        "password": generate_password_hash(password),
-        "role": "user"
-    })
-
-    current_app.send_notification(
-        "New User Signup",
-        f"User {email} registered"
+    table.put_item(
+        Item={
+            "email": email,
+            "username": username,
+            "password": generate_password_hash(password),
+            "role": "user"
+        }
     )
 
     return jsonify({"message": "User registered successfully"}), 201
@@ -60,11 +59,6 @@ def login():
     access_token = create_access_token(
         identity=user["email"],
         additional_claims={"role": user["role"]}
-    )
-
-    current_app.send_notification(
-        "User Login",
-        f"User {email} logged in"
     )
 
     return jsonify({
@@ -108,12 +102,6 @@ def logout():
 
     identity = get_jwt_identity()
     claims = get_jwt()
-
-    if identity:
-        current_app.send_notification(
-            "User Logout",
-            f"User {identity} logged out"
-        )
 
     return jsonify({
         "success": True,
